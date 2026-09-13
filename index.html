@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bag Delay Fee Refund Clock — DOT 12 / 15 / 30h</title>
+  <meta name="description" content="Paste arrival / deplane time, domestic vs international, when the bag was delivered or still missing, MBR yes/no, and bag fee. One shareable card: hours vs DOT 12/15/30h significant-delay threshold, MBR chip, automatic bag-fee refund status. Not legal advice. Not a claim filer.">
+  <meta name="theme-color" content="#0b1018">
+  <meta property="og:title" content="Bag Delay Fee Refund Clock">
+  <meta property="og:description" content="Paste arrival + delivery — past the DOT 12/15/30h bag-fee refund threshold? MBR chip. Not legal advice.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <div class="wrap">
+    <header class="site">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">12</div>
+        <div>
+          <h1>Bag Delay Fee Refund Clock</h1>
+          <p class="tagline">Arrival + delivery → 12 / 15 / 30h fee-refund clock.</p>
+        </div>
+      </div>
+      <span class="badge">DOT-cited · not a claim filer</span>
+    </header>
+
+    <aside class="myth-banner" role="note">
+      <strong>Honesty first.</strong>
+      DOT: a checked-bag <em>fee</em> refund is due when the bag is lost or <strong>significantly delayed</strong> —
+      domestic <strong>12 hours</strong> after you had a chance to deplane;
+      international <strong>15 hours</strong> if the flight was 12 hours or less, <strong>30 hours</strong> if longer —
+      <em>and</em> you filed a Mishandled Baggage Report (MBR). The refund is automatic once both are true.
+      This card does the threshold math from <em>your</em> times. It does <strong>not</strong> file an MBR, log into an airline, or start a claim.
+      Sources:
+      <a href="https://www.transportation.gov/individuals/aviation-consumer-protection/refunds" target="_blank" rel="noopener noreferrer">DOT Refunds</a>
+      ·
+      <a href="https://www.law.cornell.edu/cfr/text/14/260.5" target="_blank" rel="noopener noreferrer">14 CFR §260.5</a>.
+      <strong>Not legal advice.</strong>
+    </aside>
+
+    <section class="panel lookup" aria-labelledby="lookup-heading">
+      <h2 id="lookup-heading">1. Your bag clock</h2>
+      <p class="hint">
+        User-pasted times only — no PNR scrape, no airline login.
+        Clock starts at the chance to deplane at the <em>final</em> destination and ends at pickup or agreed delivery
+        (or “as of now” if the bag is still missing).
+      </p>
+
+      <div class="field-grid">
+        <div>
+          <label for="arriveDate">Deplane / arrival date</label>
+          <input id="arriveDate" type="date" required />
+        </div>
+        <div>
+          <label for="arriveTime">Deplane opportunity time</label>
+          <input id="arriveTime" type="time" value="14:00" required />
+        </div>
+        <div>
+          <label for="tz">Timezone of those times</label>
+          <select id="tz">
+            <option value="America/New_York">Eastern (ET)</option>
+            <option value="America/Chicago" selected>Central (CT)</option>
+            <option value="America/Denver">Mountain (MT)</option>
+            <option value="America/Los_Angeles">Pacific (PT)</option>
+            <option value="America/Phoenix">Arizona (no DST)</option>
+            <option value="Pacific/Honolulu">Hawaii</option>
+            <option value="America/Anchorage">Alaska</option>
+            <option value="UTC">UTC</option>
+          </select>
+        </div>
+        <div>
+          <label for="scope">Route</label>
+          <select id="scope">
+            <option value="domestic">Domestic (US) — 12h</option>
+            <option value="intl">International — 15h or 30h</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-grid two" id="intlRow">
+        <div>
+          <label for="intlDuration">International flight length</label>
+          <select id="intlDuration">
+            <option value="short">12 hours or less → 15h threshold</option>
+            <option value="long">More than 12 hours → 30h threshold</option>
+          </select>
+        </div>
+        <div>
+          <label for="feePaid">Checked-bag fee paid ($)</label>
+          <input id="feePaid" type="number" min="0" max="500" step="0.01" inputmode="decimal" placeholder="e.g. 40" />
+        </div>
+      </div>
+
+      <div class="field-grid two">
+        <div>
+          <label for="bagStatus">Bag now?</label>
+          <select id="bagStatus">
+            <option value="missing">Still missing</option>
+            <option value="delivered">Delivered / picked up</option>
+          </select>
+        </div>
+        <div>
+          <label for="mbr">Mishandled Baggage Report (MBR)?</label>
+          <select id="mbr">
+            <option value="no">No — not filed yet</option>
+            <option value="yes">Yes — filed with the airline</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-grid" id="endRow">
+        <div id="deliverFields">
+          <label for="endDate">Delivered / pickup date</label>
+          <input id="endDate" type="date" />
+        </div>
+        <div id="deliverTimeWrap">
+          <label for="endTime">Delivered / pickup time</label>
+          <input id="endTime" type="time" />
+        </div>
+        <div id="asOfFields">
+          <label for="asOfDate">Still missing — as of date</label>
+          <input id="asOfDate" type="date" />
+        </div>
+        <div id="asOfTimeWrap">
+          <label for="asOfTime">Still missing — as of time</label>
+          <input id="asOfTime" type="time" />
+        </div>
+      </div>
+
+      <div class="field-grid two">
+        <div class="check-row">
+          <input id="feeKnown" type="checkbox" />
+          <label for="feeKnown">I paid a checked-bag fee (show $ on card)</label>
+        </div>
+        <div>
+          <label for="noteLabel">Label (optional, on card)</label>
+          <input id="noteLabel" type="text" maxlength="48" placeholder="e.g. redacted AA 1234 · ORD" autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="btn btn-primary" id="clockBtn">Show fee-refund clock</button>
+        <button type="button" class="btn" id="shareBtn">Copy share link</button>
+        <button type="button" class="btn" id="copyBtn">Copy summary</button>
+        <button type="button" class="btn" id="pngBtn">Export PNG</button>
+        <button type="button" class="btn" id="clearBtn">Clear</button>
+      </div>
+      <p class="status" id="status" aria-live="polite"></p>
+
+      <h3 class="subhead">Labeled seeds (teaching scenarios — not live airline data)</h3>
+      <div class="presets" id="presets" role="group" aria-label="Seed bag-delay scenarios"></div>
+    </section>
+
+    <section class="panel card-panel" aria-labelledby="card-heading" id="cardSection" hidden>
+      <div class="card-toolbar">
+        <h2 id="card-heading">2. Fee-refund clock card</h2>
+        <span class="source-pill" id="sourcePill">DOT 12 / 15 / 30h</span>
+      </div>
+
+      <article class="stage-card" id="stageCard">
+        <header class="stage-card-head">
+          <div>
+            <p class="net-line" id="cardScope">—</p>
+            <h3 id="cardTitle">—</h3>
+            <p class="hash-line mono" id="cardTimes">—</p>
+          </div>
+          <span class="stage-pill" id="stagePill">—</span>
+        </header>
+
+        <div class="hero-clock" aria-label="Hours elapsed versus significant-delay threshold">
+          <div class="hero-stat">
+            <span class="hero-kicker">Hours since deplane opportunity</span>
+            <p class="hero-value" id="hoursDisp">—</p>
+            <span class="hero-sub" id="hoursSub">—</span>
+          </div>
+          <div class="hero-stat">
+            <span class="hero-kicker">DOT significant-delay line</span>
+            <p class="hero-value thresh" id="threshDisp">—</p>
+            <span class="hero-sub" id="threshSub">—</span>
+          </div>
+        </div>
+
+        <div class="clock-bar-wrap">
+          <div class="clock-bar-meta">
+            <span id="barStartLabel">0h</span>
+            <span id="barThreshLabel">threshold</span>
+            <span id="barEndLabel">elapsed</span>
+          </div>
+          <div class="clock-bar" id="clockBar" role="img" aria-label="Elapsed hours versus threshold">
+            <div class="clock-bar-fill" id="clockBarFill"></div>
+            <div class="clock-bar-tick" id="clockBarTick" aria-hidden="true"></div>
+          </div>
+          <p class="clock-bar-caption" id="barCaption">Threshold labeled in text: domestic 12h / international 15h / 30h — not color-only.</p>
+        </div>
+
+        <div class="chip-row" aria-label="Status chips">
+          <span class="info-chip" id="mbrChip">MBR: —</span>
+          <span class="info-chip" id="feeChip">Bag fee: —</span>
+          <span class="info-chip" id="dueChip">Automatic refund: —</span>
+        </div>
+
+        <div class="eta-block">
+          <div>
+            <span class="label">Automatic bag-fee refund due?</span>
+            <p id="dueText">—</p>
+          </div>
+          <div>
+            <span class="label">Hours vs threshold</span>
+            <p id="vsText">—</p>
+          </div>
+        </div>
+
+        <div class="claim-block">
+          <h4>Plain English</h4>
+          <p id="plainText">—</p>
+          <div class="explorer-links" id="citeLinks"></div>
+        </div>
+
+        <aside class="tradeoff" role="note">
+          <h4>File MBR with the airline</h4>
+          <p id="mbrNote">
+            DOT: you must file a Mishandled Baggage Report to receive the bag-fee refund.
+            This card does not file it. Confirm on the airline desk / app, then
+            <a href="https://www.transportation.gov/individuals/aviation-consumer-protection/refunds" target="_blank" rel="noopener noreferrer">transportation.gov refunds</a>.
+          </p>
+        </aside>
+
+        <footer class="stage-card-foot">
+          <span>Public DOT / 14 CFR §260.5 framing · not legal advice</span>
+          <span>Free utility · ad-supported</span>
+        </footer>
+      </article>
+
+      <canvas id="pngCanvas" width="900" height="780" hidden aria-hidden="true"></canvas>
+    </section>
+
+    <section class="panel" aria-labelledby="how-heading">
+      <h2 id="how-heading">When is a checked bag “significantly delayed” for a fee refund?</h2>
+      <div class="how-grid">
+        <div class="how-card">
+          <h3>Domestic 12h</h3>
+          <p>DOT: the bag is significantly delayed if it is not delivered within <strong>12 hours</strong> of the opportunity to deplane at the final destination (US domestic).</p>
+        </div>
+        <div class="how-card">
+          <h3>International 15h / 30h</h3>
+          <p>International: <strong>15 hours</strong> if that flight segment was 12 hours or less; <strong>30 hours</strong> if the flight was more than 12 hours.</p>
+        </div>
+        <div class="how-card">
+          <h3>MBR is required</h3>
+          <p>14 CFR §260.5: the carrier refunds the checked-bag fee when the passenger files a Mishandled Baggage Report. Automatic once the delay is significant <em>and</em> the MBR is on file. This tool does not file it.</p>
+        </div>
+        <div class="how-card">
+          <h3>Share the card</h3>
+          <p>Screenshot or Export PNG for the group chat: “am I past 12 hours yet?” The bar still reads without the form. Not a claim mill. Not airline customer service.</p>
+        </div>
+      </div>
+    </section>
+
+    <div class="ad-slot" aria-hidden="true">
+      <span class="ad-label">Ad slot (placeholder — AdSense later)</span>
+      <p>Inventory under the clock card + “when is a checked bag significantly delayed?” explainer · brand-safe display only · never inside PNG</p>
+    </div>
+
+    <footer class="site-foot">
+      <p><strong>Bag Delay Fee Refund Clock</strong> — DOT-cited bag-fee threshold honesty, not a claim filer. Free utility.</p>
+      <p class="hint">Not legal advice. Not a substitute for filing an MBR with the airline. Carriers and facts vary. Always confirm at
+        <a href="https://www.transportation.gov/individuals/aviation-consumer-protection/refunds" target="_blank" rel="noopener noreferrer">DOT Refunds</a>
+        and
+        <a href="https://www.law.cornell.edu/cfr/text/14/260.5" target="_blank" rel="noopener noreferrer">14 CFR §260.5</a>.
+        Mishandled-baggage volume context:
+        <a href="https://www.transportation.gov/resources/individuals/aviation-consumer-protection/august-2026-air-travel-consumer-report-june-and" target="_blank" rel="noopener noreferrer">August 2026 ATCR</a>
+        (June + H1 2026).
+      </p>
+    </footer>
+  </div>
+</body>
+</html>
