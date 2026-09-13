@@ -190,15 +190,24 @@
             <span id="barThreshLabel">threshold</span>
             <span id="barEndLabel">elapsed</span>
           </div>
-          <div class="clock-bar" id="clockBar" role="img" aria-label="Elapsed hours versus threshold">
-            <div class="clock-bar-fill" id="clockBarFill"></div>
+          <div class="clock-bar-track">
+            <div class="clock-bar" id="clockBar" role="img" aria-label="Elapsed hours versus threshold">
+              <div class="clock-bar-fill" id="clockBarFill"></div>
+            </div>
             <div class="clock-bar-tick" id="clockBarTick" aria-hidden="true"></div>
           </div>
+          <p class="clock-bar-flag" id="barFlag" aria-live="polite">
+            <span id="barFlagLead">—</span>
+            <span class="clock-bar-flag-detail" id="barFlagDetail"></span>
+          </p>
           <p class="clock-bar-caption" id="barCaption">Threshold labeled in text: domestic 12h / international 15h / 30h — not color-only.</p>
         </div>
 
         <div class="chip-row" aria-label="Status chips">
-          <span class="info-chip" id="mbrChip">MBR: —</span>
+          <span class="info-chip stacked" id="mbrChip">
+            <span class="chip-lead" id="mbrChipLead">MBR: —</span>
+            <span class="chip-sub" id="mbrChipSub">required for automatic refund</span>
+          </span>
           <span class="info-chip" id="feeChip">Bag fee: —</span>
           <span class="info-chip" id="dueChip">Automatic refund: —</span>
         </div>

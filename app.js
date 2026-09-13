@@ -516,9 +516,43 @@
         ? " — PAST the line by " + hoursLabel(result.overHours) + "."
         : " — " + hoursLabel(result.remainingHours) + " remain.");
 
+    const flag = $("barFlag");
+    const flagLead = $("barFlagLead");
+    const flagDetail = $("barFlagDetail");
+    let lead;
+    if (result.statusKey === "file") {
+      lead = "PAST " + result.thresholdHours + "h · file MBR";
+    } else if (result.past) {
+      lead = "PAST " + result.thresholdHours + "h · +" + hoursLabel(result.overHours);
+    } else if (result.statusKey === "early") {
+      lead = "DELIVERED BEFORE " + result.thresholdHours + "h · " + hoursLabel(result.remainingHours) + " under";
+    } else {
+      lead = "NOT YET · " + hoursLabel(result.remainingHours) + " remain to " + result.thresholdHours + "h";
+    }
+    flagLead.textContent = lead;
+    flagDetail.textContent =
+      "White tick = " +
+      result.thresholdLabel +
+      " (text, not color-only). " +
+      (result.past ? "Elapsed is past the line." : "Elapsed has not reached the line.");
+    flag.className =
+      "clock-bar-flag " + (result.statusKey === "early" ? "early" : result.past ? "past" : "notyet");
+    bar.setAttribute(
+      "aria-label",
+      lead +
+        ". Elapsed " +
+        hoursLabel(result.elapsedHours) +
+        " versus " +
+        result.thresholdLabel +
+        "."
+    );
+
     const mbrChip = $("mbrChip");
-    mbrChip.textContent = result.input.mbr ? "MBR: filed" : "MBR: not filed";
-    mbrChip.className = "info-chip " + (result.input.mbr ? "yes" : "no");
+    $("mbrChipLead").textContent = result.input.mbr ? "MBR: filed" : "MBR: not filed";
+    $("mbrChipSub").textContent = result.input.mbr
+      ? "Required · refund can be automatic"
+      : "Required · refund not automatic yet";
+    mbrChip.className = "info-chip stacked " + (result.input.mbr ? "yes" : "no");
 
     const feeChip = $("feeChip");
     if (result.input.feeKnown && Number.isFinite(result.fee)) {
@@ -852,6 +886,21 @@
     ctx.fillText("threshold " + r.thresholdHours + "h (labeled)", tickX - 70, barY + 40);
     ctx.fillText(hoursDecimal(r.elapsedHours) + " elapsed", barX + barW - 130, barY + 40);
 
+    let pngFlag;
+    if (r.statusKey === "file") {
+      pngFlag = "PAST " + r.thresholdHours + "h · FILE MBR";
+    } else if (r.past) {
+      pngFlag = "PAST " + r.thresholdHours + "h · +" + hoursLabel(r.overHours);
+    } else if (r.statusKey === "early") {
+      pngFlag = "DELIVERED BEFORE " + r.thresholdHours + "h · " + hoursLabel(r.remainingHours) + " UNDER";
+    } else {
+      pngFlag = "NOT YET · " + hoursLabel(r.remainingHours) + " REMAIN TO " + r.thresholdHours + "h";
+    }
+    ctx.fillStyle =
+      r.statusKey === "early" ? "#5ec8c0" : r.past ? "#f07178" : "#f0b429";
+    ctx.font = "700 16px IBM Plex Sans, sans-serif";
+    ctx.fillText(pngFlag, 48, barY + 62);
+
     // Chips
     function chip(x, y, text, color) {
       ctx.font = "700 12px IBM Plex Sans, sans-serif";
@@ -866,22 +915,27 @@
       return w + 10;
     }
     let cx = 48;
-    const cy = 338;
-    cx += chip(cx, cy, r.input.mbr ? "MBR: FILED" : "MBR: NOT FILED", r.input.mbr ? "#3ecf8e" : "#f0b429");
+    const cy = 356;
+    cx += chip(
+      cx,
+      cy,
+      r.input.mbr ? "MBR: FILED · REQUIRED" : "MBR: NOT FILED · NOT AUTOMATIC",
+      r.input.mbr ? "#3ecf8e" : "#f0b429"
+    );
     if (r.input.feeKnown && Number.isFinite(r.fee)) {
       cx += chip(cx, cy, "BAG FEE " + money(r.fee), "#e8eef4");
     }
     chip(cx, cy, r.dueChip.toUpperCase(), r.pillClass === "due" ? "#3ecf8e" : r.pillClass === "file" ? "#f07178" : "#f0b429");
 
-    roundRect(ctx, 48, 384, W - 96, 150, 12);
+    roundRect(ctx, 48, 398, W - 96, 138, 12);
     ctx.fillStyle = "#121a24";
     ctx.fill();
     ctx.fillStyle = "#e8eef4";
     ctx.font = "600 15px IBM Plex Sans, sans-serif";
-    ctx.fillText(r.dueText, 68, 412);
+    ctx.fillText(r.dueText, 68, 424);
     ctx.fillStyle = "#c5d0da";
     ctx.font = "400 14px IBM Plex Sans, sans-serif";
-    wrapText(ctx, r.plain, 68, 440, W - 136, 20, 5);
+    wrapText(ctx, r.plain, 68, 450, W - 136, 20, 4);
 
     ctx.fillStyle = "#f0b429";
     ctx.font = "600 13px IBM Plex Sans, sans-serif";
